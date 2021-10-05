@@ -1,0 +1,350 @@
+#include <Servo.h>
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+
+/*-------Defining Inputs------*/
+
+int LS = 10;      // left sensor
+int RS = 11;      // right sensor
+int BLS = 9;      // back left sensor
+int BRS = 6;      // back right sensor
+int IRF = 12;
+int IRB = 13;
+
+const int voltageSensor = A0;
+
+float vOUT = 0.0;
+float vIN = 0.0;
+float R1 = 30000.0;
+float R2 = 7500.0;
+int value = 0;
+
+RF24 radio(7, 8); // CE, CSN
+const byte address[6] = "00001";
+char text[32] = "";
+
+const int l1 = 2; 
+const int l2 = 4; 
+const int r1 = 3; 
+const int r2 = 5; 
+const int d1 = 22; 
+const int d2 = 24; 
+const int d3 = 26; 
+const int d4 = 28; 
+
+Servo myservo;  // create servo object to control a servo
+       
+int pos = 0;    
+int stopBot =0;
+int started =0;
+int movement=0;
+
+
+//Functions
+
+void bigdelay(){
+  delay(10000);
+  delay(10000);
+  delay(10000);
+  delay(10000);
+  delay(10000);
+  delay(10000);
+  delay(10000);
+  delay(10000);
+  delay(10000);
+}
+
+void Ffronttoleft(){
+   for (pos = 50; pos <= 75; pos += 1) { 
+    myservo.write(pos);
+    delay(15);
+  }
+  digitalWrite(d1,LOW);
+  digitalWrite(d2,HIGH);
+  digitalWrite(d3,LOW);
+  digitalWrite(d4,HIGH);
+  
+}
+
+void Ffronttoright(){
+  for (pos = 50; pos >= 20; pos -= 1) { 
+    myservo.write(pos);
+    delay(15);
+  }
+  digitalWrite(d1,LOW);
+  digitalWrite(d2,HIGH);
+  digitalWrite(d3,LOW);
+  digitalWrite(d4,HIGH);
+}
+
+void Flefttofront(){
+  for (pos = 65; pos >= 50; pos -= 1) { 
+    myservo.write(pos);
+    delay(15);
+  }
+  digitalWrite(d1,LOW);
+  digitalWrite(d2,HIGH);
+  digitalWrite(d3,LOW);
+  digitalWrite(d4,HIGH);
+}
+
+void Frighttofront(){
+   
+    myservo.write(50);
+    delay(15);
+
+  digitalWrite(d1,LOW);
+  digitalWrite(d2,HIGH);
+  digitalWrite(d3,LOW);
+  digitalWrite(d4,HIGH);
+}
+
+void Bfronttoleft(){
+   for (pos = 50; pos <= 75; pos += 1) { 
+    myservo.write(pos);
+    delay(15);
+  }
+ digitalWrite(d1,HIGH);
+  digitalWrite(d2,LOW);
+  digitalWrite(d3,HIGH);
+  digitalWrite(d4,LOW);
+  
+}
+
+void Bfronttoright(){
+  for (pos = 50; pos >= 20; pos -= 1) { 
+    myservo.write(pos);
+    delay(15);
+  }
+  digitalWrite(d1,HIGH);
+  digitalWrite(d2,LOW);
+  digitalWrite(d3,HIGH);
+  digitalWrite(d4,LOW);
+
+  
+}
+
+void Blefttofront(){
+  for (pos = 65; pos >= 50; pos -= 1) { 
+    myservo.write(pos);
+    delay(15);
+  }
+  digitalWrite(d1,HIGH);
+  digitalWrite(d2,LOW);
+  digitalWrite(d3,HIGH);
+  digitalWrite(d4,LOW);
+}
+
+void Brighttofront(){
+   
+    myservo.write(40);
+    delay(15);
+
+ digitalWrite(d1,HIGH);
+  digitalWrite(d2,LOW);
+  digitalWrite(d3,HIGH);
+  digitalWrite(d4,LOW);
+}
+
+void backward(){
+  digitalWrite(d1,HIGH);
+  digitalWrite(d2,LOW);
+  digitalWrite(d3,HIGH);
+  digitalWrite(d4,LOW);
+}
+
+void forward(){
+  digitalWrite(d1,LOW);
+  digitalWrite(d2,HIGH);
+  digitalWrite(d3,LOW);
+  digitalWrite(d4,HIGH);
+}
+
+void stopmotor(){
+  myservo.write(45);
+  analogWrite(l1,0);
+  analogWrite(l2,0);
+  analogWrite(r1,0);
+  analogWrite(r2,0);
+}
+
+void startmotor(){
+  myservo.write(45);
+  analogWrite(l1,40);
+  analogWrite(l2,40);
+  analogWrite(r1,51);
+  analogWrite(r2,51);
+}
+
+void jetsonSeq1(){
+  
+    //Notify Jetson Nano
+    delay(7000);
+  }
+
+void jetsonSeq2(){
+  
+    //Notify Jetson Nano
+    delay(7000);
+  }
+
+  void backwardMotion(){
+    
+    while(1){
+      //startmotor();
+  if(digitalRead(BRS) && digitalRead(BLS))     // Move Forward
+  {
+    backward();
+  }
+  
+  if(!(digitalRead(BRS)) && digitalRead(BLS))     // Turn right
+  {
+    Bfronttoright();
+    delay(1000);
+    Brighttofront();
+  }
+  
+  if(digitalRead(BRS) && !(digitalRead(BLS)))     // turn left
+  {
+    Bfronttoleft();
+    delay(1000);
+    Blefttofront();
+  }
+  
+  if(!(digitalRead(IRB)))     // stop
+  {
+   stopmotor();
+   jetsonSeq2();
+ break;
+   
+  }
+      }
+    }
+
+    void forwardMotion(){
+      
+       while(1){
+       startmotor();
+  if(digitalRead(LS) && digitalRead(RS))     // Move Forward
+  {
+    forward();
+  }
+  
+  if(!(digitalRead(LS)) && digitalRead(RS))     // Turn right
+  {
+    Ffronttoright();
+    delay(1000);
+    Frighttofront();
+  }
+  
+  if(digitalRead(LS) && !(digitalRead(RS)))     // turn left
+  {
+    Ffronttoleft();
+    delay(1000);
+    Flefttofront();
+  }
+  
+  if(digitalRead(IRF)==LOW)     // stop
+  {
+   stopmotor();
+   jetsonSeq1();
+   backwardMotion();
+  }
+    }
+      }
+
+int batteryCheck(){
+  value = analogRead(voltageSensor);
+  vOUT = (value * 5.0) / 1024.0;
+  vIN = vOUT / (R2/(R1+R2));
+  Serial.print("Input = ");
+  Serial.println(vIN);
+  delay(500);
+  if(vIN>22)return 1;
+  else{
+digitalWrite(33,HIGH);
+    return 0;
+    }
+  }
+
+  int nrfStatus(){
+     if (radio.available()) {
+    char text[32] = "";
+    radio.read(&text, sizeof(text));
+    Serial.print(text);
+    return 1;
+  }
+  else{return 0;}
+    }
+
+void setup()
+{
+  pinMode(LS, INPUT);
+  pinMode(RS, INPUT);
+  pinMode(IRF, INPUT);
+  pinMode(IRB, INPUT);
+  pinMode(2,OUTPUT);
+   pinMode(31,OUTPUT);
+  pinMode(3,OUTPUT);
+  pinMode(4,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(22,OUTPUT);
+  pinMode(24,OUTPUT);
+  pinMode(26,OUTPUT);
+  pinMode(28,OUTPUT);
+  pinMode(33,OUTPUT);
+  pinMode(4,INPUT);
+  radio.begin();
+  radio.openReadingPipe(0, address);
+  radio.setPALevel(RF24_PA_MIN);
+  radio.startListening();
+  myservo.attach(33);
+  myservo.write(45);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+//  while(1){
+//  if(batteryCheck())break;
+//
+//  }
+//  Serial.println("A");
+//  while(1){
+//  if(nrfStatus())break;
+//
+//  }
+  startmotor();
+   Serial.println("A");
+ 
+  if(digitalRead(LS) && digitalRead(RS))     // Move Forward
+  {
+    forward();
+  }
+  
+  if(!(digitalRead(LS)) && digitalRead(RS))     // Turn right
+  {
+    Ffronttoright();
+    delay(1000);
+    Frighttofront();
+  }
+  
+  if(digitalRead(LS) && !(digitalRead(RS)))     // turn left
+  {
+    Ffronttoleft();
+    delay(1000);
+    Flefttofront();
+  }
+  
+  if(!(digitalRead(IRF)))     // stop
+  {
+   stopmotor();
+  delay(2000);
+startmotor();
+   backwardMotion();
+  }
+  
+    
+ 
+}
