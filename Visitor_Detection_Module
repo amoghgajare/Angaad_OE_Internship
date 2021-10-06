@@ -1,0 +1,48 @@
+
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+
+RF24 radio(7, 8); // CE, CSN
+const int  buttonPin = 11;    // the pin that the pushbutton is attached to
+
+// Variables will change:
+int buttonPushCounter = 0;   // counter for the number of button presses
+int buttonState = 0;         // current state of the button
+int lastButtonState = 0;     // previous state of the button
+
+const byte address[6] = "00001";
+
+int presentState = 0;         // current state of the button
+int lastState = 0;     // previous state of the button
+
+void setup() {
+  pinMode(11, INPUT); //Visitor Detecting Sensor (Proximity/IR Obstacle Sensor)
+  radio.begin();
+  radio.openWritingPipe(address);
+  radio.setPALevel(RF24_PA_MIN);
+  radio.stopListening();
+}
+
+void loop() {
+ buttonState = digitalRead(buttonPin);
+
+  // compare the buttonState to its previous state
+  if (buttonState != lastButtonState) {
+    // if the state has changed, increment the counter
+    if (buttonState == HIGH) {
+      // if the current state is HIGH then the button went from off to on:
+      const char text[] = "I";
+  radio.write(&text, sizeof(text));
+  delay(300);
+    } else {
+      // if the current state is LOW then the button went from on to off:
+      Serial.println("off");
+    }
+    // Delay a little bit to avoid bouncing
+    delay(50);
+  }
+  // save the current state as the last state, for next time through the loop
+  lastButtonState = buttonState;
+
+}
